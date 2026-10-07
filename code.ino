@@ -5,22 +5,20 @@ const char* ssid = "WI-FI";
 
 WebServer server(80);
 
-// ================= PIN CONFIG =================
 #define L1 23
 #define L2 22
 #define L3 21
 #define L4 19
 #define FAN 18
 
-// ================= HTML =================
 String html = R"rawliteral(
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>Smart Home Control</title>
+<meta name="theme-color" content="#07111f">
+<title>MH2 Smart Home</title>
 
 <style>
 
@@ -30,200 +28,396 @@ String html = R"rawliteral(
     padding:0;
 }
 
+:root{
+    --bg:#050914;
+    --card:rgba(14,24,42,.72);
+    --border:rgba(255,255,255,.08);
+    --cyan:#00eaff;
+    --blue:#3977ff;
+    --green:#00ff9d;
+    --text:#f4f8ff;
+    --muted:#7d8ca5;
+}
+
 body{
     min-height:100vh;
     font-family:Arial,Helvetica,sans-serif;
-    color:#fff;
+    color:var(--text);
     background:
-        radial-gradient(circle at top left,#123b46 0%,transparent 35%),
-        radial-gradient(circle at bottom right,#17285b 0%,transparent 40%),
-        #050914;
-    display:flex;
-    justify-content:center;
-    align-items:center;
+        radial-gradient(circle at 10% 10%,rgba(0,234,255,.13),transparent 28%),
+        radial-gradient(circle at 90% 85%,rgba(57,119,255,.16),transparent 32%),
+        linear-gradient(145deg,#030711,#07101e 50%,#050914);
     padding:20px;
 }
 
 .app{
     width:100%;
-    max-width:520px;
-    padding:25px;
-    border:1px solid rgba(255,255,255,.1);
-    border-radius:28px;
-    background:rgba(10,17,32,.78);
-    backdrop-filter:blur(20px);
-    box-shadow:
-        0 25px 70px rgba(0,0,0,.45),
-        inset 0 1px 0 rgba(255,255,255,.05);
+    max-width:900px;
+    margin:auto;
 }
 
-.header{
-    text-align:center;
-    margin-bottom:25px;
+.topbar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:15px;
+    margin-bottom:22px;
+}
+
+.brand{
+    display:flex;
+    align-items:center;
+    gap:13px;
 }
 
 .logo{
-    width:70px;
-    height:70px;
-    margin:0 auto 15px;
-    border-radius:22px;
+    width:52px;
+    height:52px;
+    border-radius:17px;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    font-size:26px;
+    background:linear-gradient(135deg,var(--cyan),var(--blue));
+    box-shadow:0 0 30px rgba(0,234,255,.2);
+}
+
+.brand h1{
+    font-size:21px;
+    letter-spacing:.3px;
+}
+
+.brand p{
+    color:var(--muted);
+    font-size:12px;
+    margin-top:4px;
+}
+
+.connection{
     display:flex;
     align-items:center;
-    justify-content:center;
-    font-size:35px;
-    background:linear-gradient(135deg,#00f6ff,#2251d3);
-    box-shadow:0 0 35px rgba(0,246,255,.25);
-}
-
-h1{
-    font-size:27px;
-    margin-bottom:8px;
-    background:linear-gradient(90deg,#00f6ff,#7df9ff);
-    -webkit-background-clip:text;
-    color:transparent;
-}
-
-.subtitle{
-    color:#8793a8;
-    font-size:14px;
-}
-
-.status-bar{
-    display:flex;
-    align-items:center;
-    justify-content:center;
     gap:8px;
-    margin:20px 0;
-    padding:11px;
+    padding:10px 14px;
+    border:1px solid rgba(0,255,157,.18);
     border-radius:14px;
-    background:rgba(255,255,255,.045);
-    color:#aeb8c9;
-    font-size:13px;
+    background:rgba(0,255,157,.05);
+    color:#9bffda;
+    font-size:12px;
 }
 
-.status-dot{
-    width:9px;
-    height:9px;
+.connection-dot{
+    width:8px;
+    height:8px;
     border-radius:50%;
-    background:#00ff88;
-    box-shadow:0 0 12px #00ff88;
+    background:var(--green);
+    box-shadow:0 0 12px var(--green);
+}
+
+.hero{
+    position:relative;
+    overflow:hidden;
+    padding:30px;
+    margin-bottom:20px;
+    border:1px solid var(--border);
+    border-radius:26px;
+    background:
+        linear-gradient(135deg,rgba(0,234,255,.08),rgba(57,119,255,.04)),
+        var(--card);
+    backdrop-filter:blur(20px);
+    box-shadow:0 25px 70px rgba(0,0,0,.35);
+}
+
+.hero::before{
+    content:"";
+    position:absolute;
+    width:180px;
+    height:180px;
+    right:-70px;
+    top:-80px;
+    border-radius:50%;
+    background:rgba(0,234,255,.12);
+    filter:blur(30px);
+}
+
+.hero-content{
+    position:relative;
+    z-index:1;
+}
+
+.hero-label{
+    color:var(--cyan);
+    font-size:11px;
+    font-weight:bold;
+    letter-spacing:2px;
+    text-transform:uppercase;
+    margin-bottom:9px;
+}
+
+.hero h2{
+    font-size:32px;
+    margin-bottom:8px;
+}
+
+.hero p{
+    color:var(--muted);
+    font-size:14px;
+    line-height:1.6;
+    max-width:520px;
+}
+
+.stats{
+    position:relative;
+    z-index:1;
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:12px;
+    margin-top:25px;
+}
+
+.stat{
+    padding:15px;
+    border:1px solid var(--border);
+    border-radius:16px;
+    background:rgba(255,255,255,.035);
+}
+
+.stat span{
+    display:block;
+    color:var(--muted);
+    font-size:11px;
+    margin-bottom:6px;
+}
+
+.stat strong{
+    font-size:20px;
+}
+
+.section-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin:26px 3px 14px;
+}
+
+.section-head h3{
+    font-size:18px;
+}
+
+.section-head span{
+    color:var(--muted);
+    font-size:12px;
 }
 
 .controls{
     display:grid;
-    grid-template-columns:1fr 1fr;
+    grid-template-columns:repeat(2,1fr);
     gap:14px;
 }
 
 .device{
     position:relative;
     overflow:hidden;
-    border:1px solid rgba(255,255,255,.08);
-    border-radius:20px;
-    padding:18px;
-    background:rgba(255,255,255,.045);
-    transition:.25s ease;
+    padding:20px;
+    border:1px solid var(--border);
+    border-radius:22px;
+    background:var(--card);
+    backdrop-filter:blur(18px);
+    transition:.3s ease;
 }
 
 .device:hover{
     transform:translateY(-3px);
-    border-color:rgba(0,246,255,.3);
+    border-color:rgba(0,234,255,.22);
 }
 
 .device.active{
-    background:linear-gradient(
-        145deg,
-        rgba(0,255,136,.13),
-        rgba(0,246,255,.05)
-    );
-    border-color:rgba(0,255,136,.35);
+    border-color:rgba(0,255,157,.35);
+    background:
+        linear-gradient(145deg,rgba(0,255,157,.11),rgba(0,234,255,.035)),
+        var(--card);
+    box-shadow:0 15px 40px rgba(0,255,157,.06);
 }
 
 .device-top{
     display:flex;
     justify-content:space-between;
+    align-items:flex-start;
+}
+
+.device-info h4{
+    font-size:16px;
+    margin-bottom:6px;
+}
+
+.state{
+    display:flex;
     align-items:center;
-    margin-bottom:17px;
+    gap:6px;
+    color:var(--muted);
+    font-size:11px;
+}
+
+.state-dot{
+    width:6px;
+    height:6px;
+    border-radius:50%;
+    background:#65738a;
+}
+
+.device.active .state{
+    color:var(--green);
+}
+
+.device.active .state-dot{
+    background:var(--green);
+    box-shadow:0 0 10px var(--green);
 }
 
 .icon{
-    width:46px;
-    height:46px;
-    border-radius:14px;
+    width:48px;
+    height:48px;
     display:flex;
-    align-items:center;
     justify-content:center;
+    align-items:center;
+    border-radius:15px;
+    background:#101a2d;
     font-size:23px;
-    background:#151e31;
-    transition:.25s;
+    transition:.3s;
 }
 
 .device.active .icon{
-    background:#00ff88;
-    color:#001c10;
-    box-shadow:0 0 20px rgba(0,255,136,.35);
+    background:rgba(0,255,157,.14);
+    box-shadow:0 0 25px rgba(0,255,157,.12);
 }
 
-.device-name{
-    font-weight:bold;
-    font-size:16px;
-    margin-bottom:5px;
+.device-bottom{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:15px;
+    margin-top:25px;
 }
 
-.device-state{
-    font-size:12px;
-    color:#718096;
-}
-
-.device.active .device-state{
-    color:#00ff88;
+.power{
+    font-size:11px;
+    color:var(--muted);
 }
 
 .toggle{
-    width:100%;
-    height:45px;
+    position:relative;
+    width:62px;
+    height:34px;
     border:0;
-    border-radius:13px;
-    background:#1a2335;
-    color:#aeb8c9;
-    font-size:14px;
-    font-weight:bold;
+    border-radius:50px;
+    background:#1b263b;
     cursor:pointer;
-    transition:.25s;
+    transition:.3s;
 }
 
-.toggle:hover{
-    background:#253149;
+.toggle span{
+    position:absolute;
+    width:26px;
+    height:26px;
+    left:4px;
+    top:4px;
+    border-radius:50%;
+    background:#7e8ca2;
+    transition:.3s;
+    box-shadow:0 3px 10px rgba(0,0,0,.3);
 }
 
 .device.active .toggle{
-    background:#00ff88;
-    color:#00150c;
-    box-shadow:0 0 18px rgba(0,255,136,.25);
+    background:var(--green);
+}
+
+.device.active .toggle span{
+    left:32px;
+    background:#03140d;
 }
 
 .fan-card{
     grid-column:1 / -1;
 }
 
-.footer{
+.loading{
     text-align:center;
-    margin-top:23px;
-    padding-top:18px;
-    border-top:1px solid rgba(255,255,255,.07);
-    color:#5f6c82;
-    font-size:12px;
+    padding:30px;
+    color:var(--muted);
 }
 
-@media(max-width:420px){
+.footer{
+    margin-top:25px;
+    padding:22px 10px;
+    text-align:center;
+    border-top:1px solid var(--border);
+    color:#58677e;
+    font-size:11px;
+}
+
+.footer strong{
+    color:#8393aa;
+}
+
+.toast{
+    position:fixed;
+    left:50%;
+    bottom:25px;
+    transform:translate(-50%,20px);
+    opacity:0;
+    pointer-events:none;
+    padding:12px 18px;
+    border:1px solid rgba(255,255,255,.1);
+    border-radius:14px;
+    background:rgba(10,18,32,.94);
+    backdrop-filter:blur(15px);
+    color:#fff;
+    font-size:12px;
+    box-shadow:0 15px 40px rgba(0,0,0,.35);
+    transition:.3s;
+}
+
+.toast.show{
+    opacity:1;
+    transform:translate(-50%,0);
+}
+
+@media(max-width:600px){
 
     body{
         padding:12px;
     }
 
-    .app{
-        padding:18px;
-        border-radius:23px;
+    .topbar{
+        align-items:flex-start;
+    }
+
+    .connection{
+        padding:8px 10px;
+    }
+
+    .connection span{
+        display:none;
+    }
+
+    .hero{
+        padding:24px 20px;
+        border-radius:22px;
+    }
+
+    .hero h2{
+        font-size:27px;
+    }
+
+    .stats{
+        gap:8px;
+    }
+
+    .stat{
+        padding:12px 10px;
+    }
+
+    .stat strong{
+        font-size:17px;
     }
 
     .controls{
@@ -236,6 +430,23 @@ h1{
 
 }
 
+@media(max-width:360px){
+
+    .brand h1{
+        font-size:18px;
+    }
+
+    .logo{
+        width:46px;
+        height:46px;
+    }
+
+    .hero h2{
+        font-size:24px;
+    }
+
+}
+
 </style>
 </head>
 
@@ -243,108 +454,262 @@ h1{
 
 <div class="app">
 
-    <div class="header">
+    <div class="topbar">
 
-        <div class="logo">🏠</div>
+        <div class="brand">
 
-        <h1>Smart Home</h1>
+            <div class="logo">🏠</div>
 
-        <div class="subtitle">
-            ESP32 Wireless Control Panel
+            <div>
+                <h1>MH2 Smart Home</h1>
+                <p>ESP32 Wireless Control System</p>
+            </div>
+
+        </div>
+
+        <div class="connection">
+            <span class="connection-dot"></span>
+            <span>ESP32 Connected</span>
         </div>
 
     </div>
 
-    <div class="status-bar">
-        <span class="status-dot"></span>
-        ESP32 Access Point Connected
+
+    <section class="hero">
+
+        <div class="hero-content">
+
+            <div class="hero-label">
+                Control Center
+            </div>
+
+            <h2>Smart Home Dashboard</h2>
+
+            <p>
+                Control your lights and fan wirelessly
+                through your ESP32 local network.
+            </p>
+
+        </div>
+
+        <div class="stats">
+
+            <div class="stat">
+                <span>DEVICES</span>
+                <strong>5</strong>
+            </div>
+
+            <div class="stat">
+                <span>ACTIVE</span>
+                <strong id="active-count">0</strong>
+            </div>
+
+            <div class="stat">
+                <span>STATUS</span>
+                <strong id="system-status">READY</strong>
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <div class="section-head">
+
+        <h3>Devices</h3>
+
+        <span id="device-label">
+            0 of 5 active
+        </span>
+
     </div>
+
 
     <div class="controls">
 
+
         <div class="device" id="card-l1">
+
             <div class="device-top">
-                <div>
-                    <div class="device-name">Light 1</div>
-                    <div class="device-state" id="state-l1">OFF</div>
+
+                <div class="device-info">
+
+                    <h4>Light 1</h4>
+
+                    <div class="state">
+                        <span class="state-dot"></span>
+                        <span id="state-l1">OFF</span>
+                    </div>
+
                 </div>
+
                 <div class="icon">💡</div>
+
             </div>
 
-            <button class="toggle" onclick="toggleDevice('l1')">
-                TURN ON
-            </button>
+            <div class="device-bottom">
+
+                <div class="power">
+                    GPIO 23
+                </div>
+
+                <button class="toggle" onclick="toggleDevice('l1')">
+                    <span></span>
+                </button>
+
+            </div>
+
         </div>
 
 
         <div class="device" id="card-l2">
+
             <div class="device-top">
-                <div>
-                    <div class="device-name">Light 2</div>
-                    <div class="device-state" id="state-l2">OFF</div>
+
+                <div class="device-info">
+
+                    <h4>Light 2</h4>
+
+                    <div class="state">
+                        <span class="state-dot"></span>
+                        <span id="state-l2">OFF</span>
+                    </div>
+
                 </div>
+
                 <div class="icon">💡</div>
+
             </div>
 
-            <button class="toggle" onclick="toggleDevice('l2')">
-                TURN ON
-            </button>
+            <div class="device-bottom">
+
+                <div class="power">
+                    GPIO 22
+                </div>
+
+                <button class="toggle" onclick="toggleDevice('l2')">
+                    <span></span>
+                </button>
+
+            </div>
+
         </div>
 
 
         <div class="device" id="card-l3">
+
             <div class="device-top">
-                <div>
-                    <div class="device-name">Light 3</div>
-                    <div class="device-state" id="state-l3">OFF</div>
+
+                <div class="device-info">
+
+                    <h4>Light 3</h4>
+
+                    <div class="state">
+                        <span class="state-dot"></span>
+                        <span id="state-l3">OFF</span>
+                    </div>
+
                 </div>
+
                 <div class="icon">💡</div>
+
             </div>
 
-            <button class="toggle" onclick="toggleDevice('l3')">
-                TURN ON
-            </button>
+            <div class="device-bottom">
+
+                <div class="power">
+                    GPIO 21
+                </div>
+
+                <button class="toggle" onclick="toggleDevice('l3')">
+                    <span></span>
+                </button>
+
+            </div>
+
         </div>
 
 
         <div class="device" id="card-l4">
+
             <div class="device-top">
-                <div>
-                    <div class="device-name">Light 4</div>
-                    <div class="device-state" id="state-l4">OFF</div>
+
+                <div class="device-info">
+
+                    <h4>Light 4</h4>
+
+                    <div class="state">
+                        <span class="state-dot"></span>
+                        <span id="state-l4">OFF</span>
+                    </div>
+
                 </div>
+
                 <div class="icon">💡</div>
+
             </div>
 
-            <button class="toggle" onclick="toggleDevice('l4')">
-                TURN ON
-            </button>
+            <div class="device-bottom">
+
+                <div class="power">
+                    GPIO 19
+                </div>
+
+                <button class="toggle" onclick="toggleDevice('l4')">
+                    <span></span>
+                </button>
+
+            </div>
+
         </div>
 
 
         <div class="device fan-card" id="card-fan">
 
             <div class="device-top">
-                <div>
-                    <div class="device-name">Fan</div>
-                    <div class="device-state" id="state-fan">OFF</div>
+
+                <div class="device-info">
+
+                    <h4>Cooling Fan</h4>
+
+                    <div class="state">
+                        <span class="state-dot"></span>
+                        <span id="state-fan">OFF</span>
+                    </div>
+
                 </div>
 
                 <div class="icon">🌀</div>
+
             </div>
 
-            <button class="toggle" onclick="toggleDevice('fan')">
-                TURN ON
-            </button>
+            <div class="device-bottom">
+
+                <div class="power">
+                    GPIO 18
+                </div>
+
+                <button class="toggle" onclick="toggleDevice('fan')">
+                    <span></span>
+                </button>
+
+            </div>
 
         </div>
 
+
     </div>
+
 
     <div class="footer">
-        MH2 Smart Home • ESP32 Control System
+        <strong>MH2 Smart Home</strong> • ESP32 Control System
     </div>
 
+</div>
+
+
+<div class="toast" id="toast">
+    Device updated
 </div>
 
 
@@ -360,7 +725,12 @@ const states = {
 
 function toggleDevice(device){
 
+    const card = document.getElementById("card-" + device);
+
+    card.style.pointerEvents = "none";
+
     fetch("/" + device)
+
     .then(response => {
 
         if(!response.ok){
@@ -371,12 +741,33 @@ function toggleDevice(device){
 
         updateUI(device);
 
+        showToast(
+            device.toUpperCase() +
+            " turned " +
+            (states[device] ? "ON" : "OFF")
+        );
+
     })
+
     .catch(error => {
 
         console.error(error);
 
-        alert("Connection failed. Check ESP32 connection.");
+        document.getElementById("system-status").textContent = "ERROR";
+
+        showToast("Connection failed");
+
+        setTimeout(() => {
+            document.getElementById("system-status").textContent = "READY";
+        },2000);
+
+    })
+
+    .finally(() => {
+
+        setTimeout(() => {
+            card.style.pointerEvents = "auto";
+        },200);
 
     });
 
@@ -385,17 +776,17 @@ function toggleDevice(device){
 
 function updateUI(device){
 
-    const card = document.getElementById("card-" + device);
-    const state = document.getElementById("state-" + device);
-    const button = card.querySelector(".toggle");
+    const card =
+        document.getElementById("card-" + device);
+
+    const state =
+        document.getElementById("state-" + device);
 
     if(states[device]){
 
         card.classList.add("active");
 
         state.textContent = "ON";
-
-        button.textContent = "TURN OFF";
 
     }
     else{
@@ -404,9 +795,51 @@ function updateUI(device){
 
         state.textContent = "OFF";
 
-        button.textContent = "TURN ON";
-
     }
+
+    updateStats();
+
+}
+
+
+function updateStats(){
+
+    let active = 0;
+
+    Object.values(states).forEach(value => {
+
+        if(value){
+            active++;
+        }
+
+    });
+
+    document.getElementById("active-count").textContent =
+        active;
+
+    document.getElementById("device-label").textContent =
+        active + " of 5 active";
+
+}
+
+
+function showToast(message){
+
+    const toast =
+        document.getElementById("toast");
+
+    toast.textContent = message;
+
+    toast.classList.add("show");
+
+    clearTimeout(window.toastTimer);
+
+    window.toastTimer =
+        setTimeout(() => {
+
+            toast.classList.remove("show");
+
+        },1800);
 
 }
 
@@ -417,29 +850,27 @@ function updateUI(device){
 )rawliteral";
 
 
-// ================= SETUP =================
-
-void setup() {
+void setup(){
 
     Serial.begin(115200);
 
-    pinMode(L1, OUTPUT);
-    pinMode(L2, OUTPUT);
-    pinMode(L3, OUTPUT);
-    pinMode(L4, OUTPUT);
-    pinMode(FAN, OUTPUT);
+    pinMode(L1,OUTPUT);
+    pinMode(L2,OUTPUT);
+    pinMode(L3,OUTPUT);
+    pinMode(L4,OUTPUT);
+    pinMode(FAN,OUTPUT);
 
-    digitalWrite(L1, LOW);
-    digitalWrite(L2, LOW);
-    digitalWrite(L3, LOW);
-    digitalWrite(L4, LOW);
-    digitalWrite(FAN, LOW);
+    digitalWrite(L1,LOW);
+    digitalWrite(L2,LOW);
+    digitalWrite(L3,LOW);
+    digitalWrite(L4,LOW);
+    digitalWrite(FAN,LOW);
 
     WiFi.softAP(ssid);
 
     Serial.println();
     Serial.println("==============================");
-    Serial.println("      MH2 SMART HOME");
+    Serial.println("       MH2 SMART HOME");
     Serial.println("==============================");
     Serial.print("WiFi Name: ");
     Serial.println(ssid);
@@ -447,10 +878,7 @@ void setup() {
     Serial.println(WiFi.softAPIP());
     Serial.println("==============================");
 
-
-    // ================= HOME =================
-
-    server.on("/", []() {
+    server.on("/",[](){
 
         server.send(
             200,
@@ -460,10 +888,7 @@ void setup() {
 
     });
 
-
-    // ================= LIGHT 1 =================
-
-    server.on("/l1", []() {
+    server.on("/l1",[](){
 
         digitalWrite(
             L1,
@@ -478,10 +903,7 @@ void setup() {
 
     });
 
-
-    // ================= LIGHT 2 =================
-
-    server.on("/l2", []() {
+    server.on("/l2",[](){
 
         digitalWrite(
             L2,
@@ -496,10 +918,7 @@ void setup() {
 
     });
 
-
-    // ================= LIGHT 3 =================
-
-    server.on("/l3", []() {
+    server.on("/l3",[](){
 
         digitalWrite(
             L3,
@@ -514,10 +933,7 @@ void setup() {
 
     });
 
-
-    // ================= LIGHT 4 =================
-
-    server.on("/l4", []() {
+    server.on("/l4",[](){
 
         digitalWrite(
             L4,
@@ -532,10 +948,7 @@ void setup() {
 
     });
 
-
-    // ================= FAN =================
-
-    server.on("/fan", []() {
+    server.on("/fan",[](){
 
         digitalWrite(
             FAN,
@@ -550,16 +963,14 @@ void setup() {
 
     });
 
-
     server.begin();
 
     Serial.println("Web Server Started!");
+
 }
 
 
-// ================= LOOP =================
-
-void loop() {
+void loop(){
 
     server.handleClient();
 
